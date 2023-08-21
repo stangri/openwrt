@@ -8,23 +8,17 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openssl
-PKG_VERSION:=3.0.8
-PKG_RELEASE:=9
-PKG_BUILD_FLAGS:=no-mips16 gc-sections
+PKG_VERSION:=3.0.10
+PKG_RELEASE:=1
+PKG_BUILD_FLAGS:=no-mips16 gc-sections no-lto
 
 PKG_BUILD_PARALLEL:=1
 
-PKG_BASE:=$(subst $(space),.,$(wordlist 1,2,$(subst .,$(space),$(PKG_VERSION))))
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:= \
-	http://www.openssl.org/source/ \
-	http://www.openssl.org/source/old/$(PKG_BASE)/ \
-	http://ftp.fi.muni.cz/pub/openssl/source/ \
-	http://ftp.fi.muni.cz/pub/openssl/source/old/$(PKG_BASE)/ \
-	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/ \
-	ftp://ftp.pca.dfn.de/pub/tools/net/openssl/source/old/$(PKG_BASE)/
-
-PKG_HASH:=6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/quictls/openssl.git
+PKG_SOURCE_VERSION:=c960369e667c985c0e95a7b071e7df0c9360cef6
+PKG_MIRROR_HASH:=91bc41b1d1bdd31c58e5a13ed231224dac778df5927ddf1a6d4ae8afbf511337
 
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
@@ -141,7 +135,6 @@ endef
 ifneq ($(CONFIG_OPENSSL_ENGINE_BUILTIN_PADLOCK)$(CONFIG_OPENSSL_ENGINE_BUILTIN_DEVCRYPTO),)
 define Package/libopenssl-conf/postinst
 #!/bin/sh
-OPENSSL_UCI="$${IPKG_INSTROOT}/etc/config/openssl"
 
 add_engine_config() {
 	if [ -z "$${IPKG_INSTROOT}" ] && uci -q get "openssl.$$1" >/dev/null; then
@@ -149,12 +142,6 @@ add_engine_config() {
 		uci set "openssl.$$1.builtin=1" && uci commit openssl
 		return
 	fi
-	{
-		echo "engine '$$1'"
-		echo "	option enabled '1'"
-		echo "	option builtin '1'"
-		echo
-	} >>"$${OPENSSL_UCI}"
 }
 
 $(if $(CONFIG_OPENSSL_ENGINE_BUILTIN_DEVCRYPTO),add_engine_config devcrypto)
@@ -373,6 +360,7 @@ define Build/Configure
 			--libdir=lib \
 			--openssldir=/etc/ssl \
 			--cross-compile-prefix="$(TARGET_CROSS)" \
+			$(TARGET_CFLAGS) \
 			$(TARGET_CPPFLAGS) \
 			$(TARGET_LDFLAGS) \
 			$(OPENSSL_OPTIONS) && \
@@ -424,10 +412,10 @@ define Package/libopenssl-conf/install
 	touch $(1)/etc/config/openssl
 	$(if $(CONFIG_OPENSSL_ENGINE_BUILTIN_DEVCRYPTO),
 		$(CP) ./files/devcrypto.cnf $(1)/etc/ssl/modules.cnf.d/
-		echo -e "config engine 'devcrypto'\n\toption enabled '1'" >> $(1)/etc/config/openssl)
+		echo -e "config engine 'devcrypto'\n\toption enabled '1'\n\toption builtin '1'" >> $(1)/etc/config/openssl)
 	$(if $(CONFIG_OPENSSL_ENGINE_BUILTIN_PADLOCK),
 		$(CP) ./files/padlock.cnf $(1)/etc/ssl/modules.cnf.d/
-		echo -e "\nconfig engine 'padlock'\n\toption enabled '1'" >> $(1)/etc/config/openssl)
+		echo -e "\nconfig engine 'padlock'\n\toption enabled '1'\n\toption builtin '1'" >> $(1)/etc/config/openssl)
 endef
 
 define Package/openssl-util/install
