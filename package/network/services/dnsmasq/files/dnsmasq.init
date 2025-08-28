@@ -567,7 +567,7 @@ dhcp_add() {
 
 	config_get start "$cfg" start 100
 	config_get limit "$cfg" limit 150
-	config_get leasetime "$cfg" leasetime 12h
+	config_get leasetime "$cfg" leasetime '12h'
 	config_get options "$cfg" options
 	config_get_bool dynamicdhcp "$cfg" dynamicdhcp 1
 	config_get_bool dynamicdhcpv4 "$cfg" dynamicdhcpv4 $dynamicdhcp
@@ -578,7 +578,7 @@ dhcp_add() {
 
 	config_get ra "$cfg" ra
 	config_get ra_management "$cfg" ra_management
-	config_get ra_preference "$cfg" ra_preference
+	config_get ra_preference "$cfg" ra_preference 'medium'
 	config_get dns "$cfg" dns
 	config_get dns_sl "$cfg" domain
 
@@ -978,17 +978,17 @@ dnsmasq_start()
 		fi
 	fi
 
-	append_bool "$cfg" authoritative "--dhcp-authoritative"
-	append_bool "$cfg" nodaemon "--no-daemon"
-	append_bool "$cfg" domainneeded "--domain-needed"
-	append_bool "$cfg" filterwin2k "--filterwin2k"
-	append_bool "$cfg" nohosts "--no-hosts"
-	append_bool "$cfg" nonegcache "--no-negcache"
-	append_bool "$cfg" strictorder "--strict-order"
-	append_bool "$cfg" logqueries "--log-queries=extra"
+	append_bool "$cfg" authoritative "--dhcp-authoritative" 1
+	append_bool "$cfg" nodaemon "--no-daemon" 0
+	append_bool "$cfg" domainneeded "--domain-needed" 1
+	append_bool "$cfg" filterwin2k "--filterwin2k" 0
+	append_bool "$cfg" nohosts "--no-hosts" 0
+	append_bool "$cfg" nonegcache "--no-negcache" 0
+	append_bool "$cfg" strictorder "--strict-order" 0
+	append_bool "$cfg" logqueries "--log-queries=extra" 0
 	append_bool "$cfg" noresolv "--no-resolv"
-	append_bool "$cfg" localise_queries "--localise-queries"
-	append_bool "$cfg" readethers "--read-ethers"
+	append_bool "$cfg" localise_queries "--localise-queries" 1
+	append_bool "$cfg" readethers "--read-ethers" 1
 
 	local instance_name="dnsmasq.$cfg"
 	if [ "$cfg" = "$DEFAULT_INSTANCE" ]; then
@@ -999,39 +999,39 @@ dnsmasq_start()
 	config_get_bool ubus "$cfg" "ubus" 1
 	[ $ubus -gt 0 ] && xappend "--enable-ubus=$instance_name"
 
-	append_bool "$cfg" expandhosts "--expand-hosts"
+	append_bool "$cfg" expandhosts "--expand-hosts" 1
 	config_get tftp_root "$cfg" "tftp_root"
 	[ -n "$tftp_root" ] && mkdir -p "$tftp_root" && append_bool "$cfg" enable_tftp "--enable-tftp"
 	append_bool "$cfg" tftp_no_fail "--tftp-no-fail"
 	append_bool "$cfg" nonwildcard "--bind-dynamic" 1
-	append_bool "$cfg" fqdn "--dhcp-fqdn"
-	append_bool "$cfg" proxydnssec "--proxy-dnssec"
-	append_bool "$cfg" localservice "--local-service"
-	append_bool "$cfg" logdhcp "--log-dhcp"
-	append_bool "$cfg" quietdhcp "--quiet-dhcp"
-	append_bool "$cfg" sequential_ip "--dhcp-sequential-ip"
-	append_bool "$cfg" allservers "--all-servers"
-	append_bool "$cfg" noping "--no-ping"
-	append_bool "$cfg" rapidcommit "--dhcp-rapid-commit"
+	append_bool "$cfg" fqdn "--dhcp-fqdn" 0
+	append_bool "$cfg" proxydnssec "--proxy-dnssec" 0
+	append_bool "$cfg" localservice "--local-service" 1
+	append_bool "$cfg" logdhcp "--log-dhcp" 0
+	append_bool "$cfg" quietdhcp "--quiet-dhcp" 0
+	append_bool "$cfg" sequential_ip "--dhcp-sequential-ip" 0
+	append_bool "$cfg" allservers "--all-servers" 0
+	append_bool "$cfg" noping "--no-ping" 0
+	append_bool "$cfg" rapidcommit "--dhcp-rapid-commit" 0
 	append_bool "$cfg" scriptarp "--script-arp"
 
 	# deprecate or remove filter-X in favor of filter-rr?
-	append_bool "$cfg" filter_aaaa "--filter-AAAA"
-	append_bool "$cfg" filter_a "--filter-A"
+	append_bool "$cfg" filter_aaaa "--filter-AAAA" 0
+	append_bool "$cfg" filter_a "--filter-A" 0
 	config_list_foreach "$cfg" filter_rr append_filter_rr
 	config_list_foreach "$cfg" cache_rr append_cache_rr
 
 	append_parm "$cfg" logfacility "--log-facility"
 	config_get logfacility "$cfg" "logfacility"
-	append_parm "$cfg" cachesize "--cache-size"
-	append_parm "$cfg" dnsforwardmax "--dns-forward-max"
-	append_parm "$cfg" port "--port"
-	append_parm "$cfg" ednspacket_max "--edns-packet-max"
-	append_parm "$cfg" dhcpleasemax "--dhcp-lease-max"
+	append_parm "$cfg" cachesize "--cache-size" 1000
+	append_parm "$cfg" dnsforwardmax "--dns-forward-max" 150
+	append_parm "$cfg" port "--port" 53
+	append_parm "$cfg" ednspacket_max "--edns-packet-max" 1232
+	append_parm "$cfg" dhcpleasemax "--dhcp-lease-max" 150
 	append_parm "$cfg" "queryport" "--query-port"
-	append_parm "$cfg" "minport" "--min-port"
-	append_parm "$cfg" "maxport" "--max-port"
-	append_parm "$cfg" "domain" "--domain"
+	append_parm "$cfg" "minport" "--min-port" 0
+	append_parm "$cfg" "maxport" "--max-port" 0
+	append_parm "$cfg" "domain" "--domain" 'lan'
 	append_parm "$cfg" "local" "--local"
 	config_list_foreach "$cfg" "listen_address" append_listenaddress
 	config_list_foreach "$cfg" "server" append_server
@@ -1070,7 +1070,7 @@ dnsmasq_start()
 
 	append_parm "$cfg" "tftp_root" "--tftp-root"
 	append_parm "$cfg" "dhcp_boot" "--dhcp-boot"
-	append_parm "$cfg" "local_ttl" "--local-ttl"
+	append_parm "$cfg" "local_ttl" "--local-ttl" 0
 	append_parm "$cfg" "max_ttl" "--max-ttl"
 	append_parm "$cfg" "min_cache_ttl" "--min-cache-ttl"
 	append_parm "$cfg" "max_cache_ttl" "--max-cache-ttl"
@@ -1121,7 +1121,7 @@ dnsmasq_start()
 		xappend "--stop-dns-rebind"
 
 		local rebind_localhost
-		config_get_bool rebind_localhost "$cfg" rebind_localhost 0
+		config_get_bool rebind_localhost "$cfg" rebind_localhost 1
 		[ $rebind_localhost -gt 0 ] && {
 			log_once "Allowing 127.0.0.0/8 responses"
 			xappend "--rebind-localhost-ok"
@@ -1144,7 +1144,7 @@ dnsmasq_start()
 				[ -f "$TIMEVALIDFILE" ] || xappend "--dnssec-no-timecheck"
 			fi
 		}
-		config_get_bool dnsseccheckunsigned "$cfg" dnsseccheckunsigned 1
+		config_get_bool dnsseccheckunsigned "$cfg" dnsseccheckunsigned 0
 		[ "$dnsseccheckunsigned" -eq 0 ] && xappend "--dnssec-check-unsigned=no"
 	}
 
@@ -1226,7 +1226,7 @@ dnsmasq_start()
 		[ -n "$BOOT" ] || config_foreach filter_dnsmasq dhcp dhcp_add "$cfg"
 		xappend "--enable-ra"
 		xappend "--quiet-ra"
-		append_bool "$cfg" quietdhcp "--quiet-dhcp6"
+		append_bool "$cfg" quietdhcp "--quiet-dhcp6" 0
 
 	elif [ "$DNSMASQ_DHCP_VER" -gt 0 ] ; then
 		[ -n "$BOOT" ] || config_foreach filter_dnsmasq dhcp dhcp_add "$cfg"
